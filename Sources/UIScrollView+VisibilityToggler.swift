@@ -49,7 +49,7 @@ extension UIScrollView {
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///
 	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
-	@discardableResult public func toggleVisibilityWhenScrolledPastInset(
+	@discardableResult public func toggleVisibility(
 		of viewToToggle: UIView,
 		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold) -> ScrollViewObserverCancellable {
 		return toggleVisibility(of: viewToToggle, style: style, tresholdProvider: { $0.adjustedContentInset.top })
