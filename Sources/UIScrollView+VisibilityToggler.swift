@@ -15,14 +15,16 @@ extension UIScrollView {
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- viewToMonitor: **optional** the view to use as a treshold
 	///		- rectEdge: **optional** the edge of `viewToMonitor` to use as treshold, defaults to `.bottom`
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	///
 	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
 	@discardableResult public func toggleVisibility(
 		of viewToToggle: UIView,
 		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold,
 		whenScrollingPast viewToMonitor: UIView,
-		edge: UIRectEdge = .bottom) -> ScrollViewObserverCancellable {
-		let toggler = ScrollViewVisibilityToggler(scrollView: self, viewToMonitor: viewToMonitor, rectEdge: edge, viewToToggle: viewToToggle, style: style)
+		edge: UIRectEdge = .bottom,
+		visibilityUpdateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback? = nil) -> ScrollViewObserverCancellable {
+		let toggler = ScrollViewVisibilityToggler(scrollView: self, viewToMonitor: viewToMonitor, rectEdge: edge, viewToToggle: viewToToggle, style: style, visibilityUpdateCallback: visibilityUpdateCallback)
 		return addToggler(toggler)
 	}
 
@@ -32,13 +34,15 @@ extension UIScrollView {
 	///		- viewToToggle: **optional** the view to toggle the visibility of if `viewToMonitor` is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- tresholdProvider: the callback that provides the treshold when to hide `viewToToggle`
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	///
 	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
 	@discardableResult public func toggleVisibility(
 		of viewToToggle: UIView,
 		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold,
-		tresholdProvider: @escaping ScrollViewOffsetMonitor.OffsetProvider) -> ScrollViewObserverCancellable {
-		let toggler = ScrollViewVisibilityToggler(scrollView: self, viewToToggle: viewToToggle, style: style, tresholdProvider: tresholdProvider)
+		tresholdProvider: @escaping ScrollViewOffsetMonitor.OffsetProvider,
+		visibilityUpdateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback? = nil) -> ScrollViewObserverCancellable {
+		let toggler = ScrollViewVisibilityToggler(scrollView: self, viewToToggle: viewToToggle, style: style, tresholdProvider: tresholdProvider, visibilityUpdateCallback: visibilityUpdateCallback)
 		return addToggler(toggler)
 	}
 
@@ -47,12 +51,14 @@ extension UIScrollView {
 	/// - Parameters:
 	///		- viewToToggle: **optional** the view to toggle the visibility of if `viewToMonitor` is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	///
 	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
 	@discardableResult public func toggleVisibility(
 		of viewToToggle: UIView,
-		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold) -> ScrollViewObserverCancellable {
-		return toggleVisibility(of: viewToToggle, style: style, tresholdProvider: { $0.adjustedContentInset.top })
+		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold,
+		visibilityUpdateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback? = nil) -> ScrollViewObserverCancellable {
+			return toggleVisibility(of: viewToToggle, style: style, tresholdProvider: { $0.adjustedContentInset.top }, visibilityUpdateCallback: visibilityUpdateCallback)
 	}
 
 
@@ -85,13 +91,15 @@ extension UICollectionView {
 	///		- viewToToggle: **optional** the view to toggle the visibility of if `viewToMonitor` is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- indexPath: the index path to use as treshold
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	///
 	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
 	@discardableResult public func toggleVisibility(
 		of viewToToggle: UIView,
 		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold,
-		whenScrollingPast indexPath: IndexPath) -> ScrollViewObserverCancellable {
-		let toggler = ScrollViewVisibilityToggler(collectionView: self, viewToToggle: viewToToggle, style: style, indexPath: indexPath)
+		whenScrollingPast indexPath: IndexPath,
+		visibilityUpdateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback? = nil) -> ScrollViewObserverCancellable {
+		let toggler = ScrollViewVisibilityToggler(collectionView: self, viewToToggle: viewToToggle, style: style, indexPath: indexPath, visibilityUpdateCallback: visibilityUpdateCallback)
 		return addToggler(toggler)
 	}
 }
@@ -103,13 +111,15 @@ extension UITableView {
 	///		- viewToToggle: **optional** the view to toggle the visibility of if `viewToMonitor` is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- indexPath: the index path to use as treshold
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	///
 	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
 	@discardableResult public func toggleVisibility(
 		of viewToToggle: UIView,
 		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold,
-		whenScrollingPast indexPath: IndexPath) -> ScrollViewObserverCancellable {
-		let toggler = ScrollViewVisibilityToggler(tableView: self, viewToToggle: viewToToggle, style: style, indexPath: indexPath)
+		whenScrollingPast indexPath: IndexPath,
+		visibilityUpdateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback? = nil) -> ScrollViewObserverCancellable {
+			let toggler = ScrollViewVisibilityToggler(tableView: self, viewToToggle: viewToToggle, style: style, indexPath: indexPath, visibilityUpdateCallback: visibilityUpdateCallback)
 		return addToggler(toggler)
 	}
 }
