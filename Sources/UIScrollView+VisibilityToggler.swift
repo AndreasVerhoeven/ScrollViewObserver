@@ -58,7 +58,7 @@ extension UIScrollView {
 		of viewToToggle: UIView,
 		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold,
 		visibilityUpdateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback? = nil) -> ScrollViewObserverCancellable {
-			return toggleVisibility(of: viewToToggle, style: style, tresholdProvider: { 0 }, visibilityUpdateCallback: visibilityUpdateCallback)
+			return toggleVisibility(of: viewToToggle, style: style, tresholdProvider: { _ in 0 }, visibilityUpdateCallback: visibilityUpdateCallback)
 	}
 
 
