@@ -194,6 +194,26 @@ public class ScrollViewVisibilityToggler: NSObject {
 		}
 	}
 
+	/// Toggles the effect of a UIVisualEffectView
+	///
+	/// - Parameters:
+	/// 	- visible: the effect to show when visible
+	/// 	- hidden: **optional** the effect to show when hidden, defaults to non
+	public static func blurToggler(visible: UIVisualEffect?, hidden: UIVisualEffect? = nil) -> VisibilityUpdateCallback {
+		return { view, shouldBeVisible, animated in
+			guard let view = view as? UIVisualEffectView else { return }
+			let updates = {
+				view.effect = shouldBeVisible ? visible: hidden
+			}
+
+			if animated == true {
+				UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction], animations: updates)
+			} else {
+				updates()
+			}
+		}
+	}
+
 	// MARK: - Private
 	private func updateForChanges(animated: Bool) {
 		monitor.update()
