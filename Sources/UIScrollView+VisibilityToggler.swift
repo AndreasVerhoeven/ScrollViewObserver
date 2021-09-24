@@ -42,6 +42,20 @@ extension UIScrollView {
 		return addToggler(toggler)
 	}
 
+	/// Toggles the visibility of a view when having scrolled past the inset
+	///
+	/// - Parameters:
+	///		- viewToToggle: **optional** the view to toggle the visibility of if `viewToMonitor` is scrolled out of view
+	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
+	///
+	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
+	@discardableResult public func toggleVisibilityWhenScrolledPastInset(
+		of viewToToggle: UIView,
+		style: ScrollViewVisibilityToggler.Style = .showWhenPastTreshold) -> ScrollViewObserverCancellable {
+		return toggleVisibility(of: viewToToggle, style: style, tresholdProvider: { $0.adjustedContentInset.top })
+	}
+
+
 	fileprivate func addToggler(_ toggler: ScrollViewVisibilityToggler) -> ScrollViewObserverCancellable {
 		let cancellable = Cancellable(toggler: toggler)
 		observers[cancellable.uuid] = toggler
