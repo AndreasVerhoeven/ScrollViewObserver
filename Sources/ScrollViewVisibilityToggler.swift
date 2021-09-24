@@ -22,20 +22,20 @@ public class ScrollViewVisibilityToggler: NSObject {
 
 	/// the style of this toggler: either `hideWhenPastTreshold` or `showWhenPastTreshold`
 	/// `viewToMonitor` is scrolled out of view.
-	public var style: Style {didSet {updateForChanges()}}
+	public var style: Style {didSet {updateForChanges(animated: false)}}
 
 	/// The rect edge of `viewToMonitor` to use as treshold for determining
 	/// if we should hide `viewToToggle`.
 	/// E.g. if set to `.top`, we will hide `viewToToggle` when the top of the
 	/// `viewToMonitor` is scrolled out of view.
-	public var rectEdge: UIRectEdge {didSet {updateForChanges()}}
+	public var rectEdge: UIRectEdge {didSet {updateForChanges(animated: false)}}
 
 	/// the view to use as a treshold. When this view is scrolled out of view,
 	/// we'll hide `viewToToggle`.
-	public var viewToMonitor: UIView? {didSet {updateForChanges()}}
+	public var viewToMonitor: UIView? {didSet {updateForChanges(animated: false)}}
 
 	/// The view to toggle the visibility of. Can be the same as `viewToMonitor`.
-	public var viewToToggle: UIView? {didSet {updateForChanges()}}
+	public var viewToToggle: UIView? {didSet {updateForChanges(animated: false)}}
 	public var monitor: ScrollViewOffsetMonitor
 
 	/// Callback that determines the offset in the scroll view we are monitoring.
@@ -52,6 +52,13 @@ public class ScrollViewVisibilityToggler: NSObject {
 		set {monitor.tresholdProvider = newValue}
 	}
 
+
+	/// Callback used to do custom toggling
+	public typealias VisibilityUpdateCallback = (_ view: UIView,  _ shouldBeVisible: Bool, _ animated: Bool) -> Void
+
+	/// callback that will be called to toggle the view from visible to hidden
+	public var visibilityUpdateCallback: VisibilityUpdateCallback?
+
 	/// the scrollview we are monitoring
 	public weak var scrollView: UIScrollView? {
 		return monitor.scrollView
@@ -65,15 +72,18 @@ public class ScrollViewVisibilityToggler: NSObject {
 	///		- rectEdge: **optional** the edge of `viewToMonitor` to use as treshold, defaults to `.bottom`
 	///		- viewToToggle: **optional** the view to toggle the visibility of if `viewToMonitor` is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	public init(scrollView: UIScrollView,
 				viewToMonitor: UIView? = nil,
 				rectEdge: UIRectEdge = .bottom,
 				viewToToggle: UIView? = nil,
-				style: Style = .showWhenPastTreshold) {
+				style: Style = .showWhenPastTreshold,
+				visibilityUpdateCallback: VisibilityUpdateCallback? = nil) {
 		self.rectEdge = rectEdge
 		self.viewToMonitor = viewToMonitor
 		self.viewToToggle = viewToToggle
 		self.style = style
+		self.visibilityUpdateCallback = visibilityUpdateCallback
 		self.monitor = ScrollViewOffsetMonitor(scrollView: scrollView)
 		super.init()
 
@@ -90,8 +100,8 @@ public class ScrollViewVisibilityToggler: NSObject {
 				default: return frame.maxY
 			}
 		}
-		monitor.callback = { [weak self] _ in self?.update() }
-		self.updateForChanges()
+		monitor.callback = { [weak self] _ in self?.update(animated: true) }
+		self.updateForChanges(animated: false)
 	}
 
 	/// Creates a toggler with a custom offset provider
@@ -101,11 +111,13 @@ public class ScrollViewVisibilityToggler: NSObject {
 	///		- viewToToggle: **optional** the view to toggle the visibility of if the treshold is reached
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- tresholdProvider: the callback that provides the treshold when to hide `viewToToggle`
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	public convenience init(scrollView: UIScrollView,
 							viewToToggle: UIView? = nil,
 							style: Style = .showWhenPastTreshold,
-							tresholdProvider: @escaping ScrollViewOffsetMonitor.OffsetProvider) {
-		self.init(scrollView: scrollView, viewToToggle: viewToToggle, style: style)
+							tresholdProvider: @escaping ScrollViewOffsetMonitor.OffsetProvider,
+							visibilityUpdateCallback: VisibilityUpdateCallback? = nil) {
+		self.init(scrollView: scrollView, viewToToggle: viewToToggle, style: style, visibilityUpdateCallback: visibilityUpdateCallback)
 
 		self.tresholdProvider = tresholdProvider
 	}
@@ -117,17 +129,19 @@ public class ScrollViewVisibilityToggler: NSObject {
 	///		- viewToToggle: **optional** the view to toggle the visibility of if the index path is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- indexPath: the index path to use as treshold
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	public convenience init(collectionView: UICollectionView,
 							viewToToggle: UIView? = nil,
 							style: Style = .showWhenPastTreshold,
-							indexPath: IndexPath) {
-		self.init(scrollView: collectionView, viewToToggle: viewToToggle, style: style)
+							indexPath: IndexPath,
+							visibilityUpdateCallback: VisibilityUpdateCallback? = nil) {
+		self.init(scrollView: collectionView, viewToToggle: viewToToggle, style: style, visibilityUpdateCallback: visibilityUpdateCallback)
 		
 		self.tresholdProvider = { [weak self] scrollView in
 			guard collectionView.isValidIndexPath(indexPath) else {return self?.monitor.defaultTreshold(in: collectionView) ?? 0}
 			return collectionView.layoutAttributesForItem(at: indexPath)?.frame.maxY ?? self?.monitor.defaultTreshold(in: collectionView) ?? 0
 		}
-		self.updateForChanges()
+		self.updateForChanges(animated: false)
 	}
 
 	/// Creates a toggle that hides a view when a specific indexPath in a `UITableView` is scrolled out of view
@@ -137,17 +151,19 @@ public class ScrollViewVisibilityToggler: NSObject {
 	///		- viewToToggle: **optional** the view to toggle the visibility of if the index path is scrolled out of view
 	///		- style: **optional** the style that determines when to show/hide the `viewToToggle`, defaults to `.showWhenPastTreshold`
 	///		- indexPath: the index path to use as treshold
+	///		- visibilityUpdateCallback: **optional** callback that will be called to toggle the view's visibility - if not set, default will be used which changes alpha
 	public convenience init(tableView: UITableView,
 							viewToToggle: UIView? = nil,
 							style: Style = .showWhenPastTreshold,
-							indexPath: IndexPath) {
-		self.init(scrollView: tableView, viewToToggle: viewToToggle, style: style)
+							indexPath: IndexPath,
+							visibilityUpdateCallback: VisibilityUpdateCallback? = nil) {
+		self.init(scrollView: tableView, viewToToggle: viewToToggle, style: style, visibilityUpdateCallback: visibilityUpdateCallback)
 
 		self.tresholdProvider = { [weak self] scrollView in
 			guard tableView.isValidIndexPath(indexPath) else {return self?.monitor.defaultTreshold(in: tableView) ?? 0}
 			return tableView.rectForRow(at: indexPath).maxY
 		}
-		self.updateForChanges()
+		self.updateForChanges(animated: false)
 	}
 
 	/// starts monitoring
@@ -160,23 +176,46 @@ public class ScrollViewVisibilityToggler: NSObject {
 		monitor.stop()
 	}
 
-	// MARK: - Private
-	private func updateForChanges() {
-		monitor.update()
-		update()
+	/// default toggler
+	///
+	/// - Parameters:
+	/// 	- view: the view to toggle
+	/// 	- shouldBeVisible: if true, we'll set the alpha to 1, otherwise 0
+	/// 	- animated: if true, changes will be animated
+	public static func defaultViewVisibilityUpdate(view: UIView, shouldBeVisible: Bool, animated: Bool) {
+		let updates = {
+			view.alpha = (shouldBeVisible == true ? 1 : 0)
+		}
+
+		if animated == true {
+			UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction], animations: updates)
+		} else {
+			updates()
+		}
 	}
-	private func update() {
+
+	// MARK: - Private
+	private func updateForChanges(animated: Bool) {
+		monitor.update()
+		update(animated: animated)
+	}
+	private func update(animated: Bool) {
 		guard let viewToToggle = viewToToggle else {return}
 		let isOverTreshold = monitor.isOverTreshold
-		UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction], animations: {
-			switch self.style {
-				case .showWhenPastTreshold:
-					viewToToggle.alpha = (isOverTreshold == true ? 1 : 0)
+		let shouldReallyBeVisible: Bool
+		switch self.style {
+			case .showWhenPastTreshold:
+				shouldReallyBeVisible = isOverTreshold
 
-				case .hideWhenPastTreshold:
-					viewToToggle.alpha = (isOverTreshold == true ? 0 : 1)
-			}
-		})
+			case .hideWhenPastTreshold:
+				shouldReallyBeVisible = (isOverTreshold == false)
+		}
+
+		if let visibilityUpdateCallback = visibilityUpdateCallback {
+			visibilityUpdateCallback(viewToToggle, shouldReallyBeVisible, animated)
+		} else {
+			Self.defaultViewVisibilityUpdate(view: viewToToggle, shouldBeVisible: shouldReallyBeVisible, animated: animated)
+		}
 	}
 }
 
