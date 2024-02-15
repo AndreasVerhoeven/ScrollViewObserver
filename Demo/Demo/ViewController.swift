@@ -19,14 +19,13 @@ class ViewController: UITableViewController {
 		label.textAlignment = .center
 		label.text = "Title of this view"
 		label.sizeToFit()
-		navigationItem.titleView = label
+		//navigationItem.titleView = label
 
 		// We create a toggler that hides the label when we scroll past the 3rd row of the first section.
 		// We also keep track of the cancellable, to stop this toggling when a user taps on another row.
 		//
 		// (Note that if you have no plans of stopping the toggling, you don't need to keep track of the cancellable)
 		cancellable = tableView.toggleVisibility(of: label, style: .hideWhenPastTreshold,  whenScrollingPast: IndexPath(row: 3, section: 0))
-
 	}
 
 	override func numberOfSections(in tableView: UITableView) -> Int {

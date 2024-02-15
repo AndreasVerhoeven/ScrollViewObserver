@@ -17,7 +17,7 @@ public class ScrollViewObserver: NSObject {
 	/// true if we are observing
 	public private(set) var isObserving = false
 
-	private var context = UUID()
+	private var context = 0
 
 	public typealias Callback = (UIScrollView) -> Void
 
