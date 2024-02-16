@@ -199,7 +199,6 @@ extension UINavigationItem {
 			super.init(frame: frame)
 			
 			label.font = UIFont.preferredFont(forTextStyle: .headline)
-			label.textColor = .label
 			label.textAlignment = .center
 			label.numberOfLines = 1
 			
