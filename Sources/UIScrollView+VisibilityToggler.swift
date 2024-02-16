@@ -126,6 +126,87 @@ extension UITableView {
 
 
 extension UINavigationItem {
+	/// This view is used to wrap our Custom TitleView, so we can properly transform and change the opacity
+	/// of the intermediate wrapperView without changing the titleView, which is under control of the navigation bar
+	/// our changing the customTitleView set by the user, which is under user control
+	private class CustomTitleWrapperView: UIView {
+		let transformView = UIView()
+		
+		var view: UIView? {
+			didSet {
+				guard view !== oldValue else { return }
+				oldValue?.removeFromSuperview()
+				
+				if let view {
+					view.translatesAutoresizingMaskIntoConstraints = false
+					transformView.addSubview(view)
+					
+					NSLayoutConstraint.activate([
+						transformView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+						transformView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+						transformView.topAnchor.constraint(equalTo: view.topAnchor),
+						transformView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+					])
+				}
+			}
+		}
+		
+		var updateCallback: ScrollViewVisibilityToggler.VisibilityUpdateCallback {
+			return { view, shouldBeVisible, animated in
+				let updates = {
+					guard let transformView = (view as? CustomTitleWrapperView)?.transformView else { return }
+					
+					if shouldBeVisible == true {
+						transformView.alpha = 1
+						transformView.transform = .identity
+					} else {
+						transformView.alpha = 0
+						transformView.transform = CGAffineTransform(translationX: 0, y: 10)
+					}
+				}
+				
+				if animated == true {
+					UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction], animations: updates)
+				} else {
+					updates()
+				}
+			}
+		}
+		
+		override init(frame: CGRect) {
+			super.init(frame: frame)
+			
+			transformView.translatesAutoresizingMaskIntoConstraints = false
+			addSubview(transformView)
+			NSLayoutConstraint.activate([
+				leadingAnchor.constraint(equalTo: transformView.leadingAnchor),
+				trailingAnchor.constraint(equalTo: transformView.trailingAnchor),
+				topAnchor.constraint(equalTo: transformView.topAnchor),
+				bottomAnchor.constraint(equalTo: transformView.bottomAnchor),
+			])
+		}
+		
+		@available(*, unavailable)
+		required init?(coder: NSCoder) {
+			fatalError("not implemented")
+		}
+	}
+	
+	private class CustomTitleLabelWrapperView: CustomTitleWrapperView {
+		let label = UILabel()
+		
+		override init(frame: CGRect) {
+			super.init(frame: frame)
+			
+			label.font = UIFont.preferredFont(forTextStyle: .headline)
+			label.textColor = .label
+			label.textAlignment = .center
+			label.numberOfLines = 1
+			
+			_ = { view = label }()
+		}
+	}
+	
 	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given viewToMonitor.
 	/// Note: the titleView is wrapped in another view to aid in toggling.
 	///
@@ -141,8 +222,8 @@ extension UINavigationItem {
 		whenScrollingPast viewToMonitor: UIView,
 		in scrollView: UIScrollView
 	) -> ScrollViewObserverCancellable {
-		let (view, callback) = setupTitleView(with: titleView)
-		return scrollView.toggleVisibility(of: view, whenScrollingPast: viewToMonitor, edge: .bottom, visibilityUpdateCallback: callback)
+		let wrapperView = customTitleWrapperView(with: titleView)
+		return scrollView.toggleVisibility(of: wrapperView, whenScrollingPast: viewToMonitor, edge: .bottom, visibilityUpdateCallback: wrapperView.updateCallback)
 	}
 	
 	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given indexpath.
@@ -159,8 +240,8 @@ extension UINavigationItem {
 		whenScrollingPast indexPath: IndexPath,
 		in tableView: UITableView
 	) -> ScrollViewObserverCancellable {
-		let (view, callback) = setupTitleView(with: titleView)
-		return tableView.toggleVisibility(of: view, whenScrollingPast: indexPath, visibilityUpdateCallback: callback)
+		let wrapperView = customTitleWrapperView(with: titleView)
+		return tableView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
 	}
 	
 	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given indexpath.
@@ -177,57 +258,84 @@ extension UINavigationItem {
 		whenScrollingPast indexPath: IndexPath,
 		in collectionView: UICollectionView
 	) -> ScrollViewObserverCancellable {
-		let (view, callback) = setupTitleView(with: titleView)
-		return collectionView.toggleVisibility(of: view, whenScrollingPast: indexPath, visibilityUpdateCallback: callback)
+		let wrapperView = customTitleWrapperView(with: titleView)
+		return collectionView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
 	}
 	
-	/// Sets up a title view and returns the (addedTitleView, updateCallback)
-	private func setupTitleView(with titleView: UIView) -> (UIView, ScrollViewVisibilityToggler.VisibilityUpdateCallback) {
-		let wrapperView = UIView()
-		
-		// we adjust the alpha and transform of this view
-		let transformView = UIView()
-		transformView.translatesAutoresizingMaskIntoConstraints = false
-		wrapperView.addSubview(transformView)
-		
-		NSLayoutConstraint.activate([
-			wrapperView.leadingAnchor.constraint(equalTo: transformView.leadingAnchor),
-			wrapperView.trailingAnchor.constraint(equalTo: transformView.trailingAnchor),
-			wrapperView.topAnchor.constraint(equalTo: transformView.topAnchor),
-			wrapperView.bottomAnchor.constraint(equalTo: transformView.bottomAnchor),
-		])
-		
-		titleView.translatesAutoresizingMaskIntoConstraints = false
-		transformView.addSubview(titleView)
-		
-		NSLayoutConstraint.activate([
-			transformView.leadingAnchor.constraint(equalTo: titleView.leadingAnchor),
-			transformView.trailingAnchor.constraint(equalTo: titleView.trailingAnchor),
-			transformView.topAnchor.constraint(equalTo: titleView.topAnchor),
-			transformView.bottomAnchor.constraint(equalTo: titleView.bottomAnchor),
-		])
-		
-		self.titleView = wrapperView
-		
-		let callback: ScrollViewVisibilityToggler.VisibilityUpdateCallback = { view, shouldBeVisible, animated in
-			let updates = {
-				if shouldBeVisible == true {
-					transformView.alpha = 1
-					transformView.transform = .identity
-				} else {
-					transformView.alpha = 0
-					transformView.transform = CGAffineTransform(translationX: 0, y: 10)
-				}
-			}
-			
-			if animated == true {
-				UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction], animations: updates)
-			} else {
-				updates()
-			}
+	/// Sets a custom title to this navigation item that gets shown when we scrolled past the given viewToMonitor.
+	/// Note: the titleView is wrapped in another view to aid in toggling.
+	///
+	/// - Parameters:
+	/// 	- title: the title to set when visible
+	/// 	- viewToMonitor: the view to
+	///		- viewToMonitor: **optional** the view to use as a treshold
+	/// 	- scrollView: the scrollView to check scrolling in
+	///
+	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
+	@discardableResult public func showCustomTitle(
+		_ title: String?,
+		whenScrollingPast viewToMonitor: UIView,
+		in scrollView: UIScrollView
+	) -> ScrollViewObserverCancellable {
+		let wrapperView = customTitleLabelView(with: title)
+		return scrollView.toggleVisibility(of: wrapperView, whenScrollingPast: viewToMonitor, edge: .bottom, visibilityUpdateCallback: wrapperView.updateCallback)
+	}
+	
+	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given indexpath.
+	/// Note: the titleView is wrapped in another view to aid in toggling.
+	///
+	/// - Parameters:
+	/// 	- title: the title to set when visible
+	/// 	- indexPath: the index path to use as treshold
+	/// 	- tableView: the tableView to check scrolling in
+	///
+	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
+	@discardableResult public func showCustomTitle(
+		_ title: String?,
+		whenScrollingPast indexPath: IndexPath,
+		in tableView: UITableView
+	) -> ScrollViewObserverCancellable {
+		let wrapperView = customTitleLabelView(with: title)
+		return tableView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
+	}
+	
+	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given indexpath.
+	/// Note: the titleView is wrapped in another view to aid in toggling.
+	///
+	/// - Parameters:
+	/// 	- title: the title to set when visible
+	/// 	- indexPath: the index path to use as treshold
+	/// 	- collectionView: the collectionView to check scrolling in
+	///
+	///	- Returns: a `ScrollViewObserverCancellable` that can be used to stop toggling.
+	@discardableResult public func showCustomTitle(
+		_ title: String?,
+		whenScrollingPast indexPath: IndexPath,
+		in collectionView: UICollectionView
+	) -> ScrollViewObserverCancellable {
+		let wrapperView = customTitleLabelView(with: title)
+		return collectionView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
+	}
+	
+	/// Sets up a title view and returns the created wrapper view
+	private func customTitleWrapperView(with customTitleView: UIView) -> CustomTitleWrapperView {
+		let wrapperView: CustomTitleWrapperView
+		if let titleView = titleView as? CustomTitleWrapperView, (titleView is CustomTitleLabelWrapperView) == false {
+			wrapperView = titleView
+		} else {
+			wrapperView = CustomTitleWrapperView()
 		}
 		
-		return (wrapperView, callback)
+		wrapperView.view = customTitleView
+		titleView = wrapperView
+		return wrapperView
 	}
 	
+	/// Sets up a title and returns the  created titlewrapperview
+	private func customTitleLabelView(with title: String?) -> CustomTitleWrapperView {
+		let wrapperView = (titleView as? CustomTitleLabelWrapperView) ?? CustomTitleLabelWrapperView()
+		wrapperView.label.text = title
+		titleView = wrapperView
+		return wrapperView
+	}
 }

@@ -178,3 +178,23 @@ class UIViewController {
 	}
 }
 ```
+
+
+### UINavigationItem titles
+
+There are helper methods on UINavigationItem to automatically show a custom titleView when scrolling past another view. There's also a helper method to show a custom String directly.
+
+
+- `UINavigationItem.showCustomTitleView(_:whenScrollingPast:in)` which works for scrollViews, table views and collection views
+- `UINavigationItem.showCustomTitle(_:whenScrollingPast:in)` which works for scrollViews, table views and collection views
+
+#### Example
+
+```
+// this will automatically show mylabel when scrolling past the the title label in our custom header
+navigationItem.setCustomTitleView(myLabel, whenScrollingPast: myCustomHeaderView.titleLabel, in: tableView)
+
+// this will automatically show "My Custom Title" when scrolling past the the title label in our custom header
+navigationItem.showCustomTitle("My Custom Title", whenScrollingPasth myCustomheaderView.titleLabel, in: scrollView)
+
+```
