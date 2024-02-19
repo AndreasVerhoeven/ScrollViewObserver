@@ -195,6 +195,11 @@ extension UINavigationItem {
 	private class CustomTitleLabelWrapperView: CustomTitleWrapperView {
 		let label = UILabel()
 		
+		weak var viewToMonitor: UIView?
+		weak var scrollView: UIView?
+		var cancellable: ScrollViewObserverCancellable?
+		var indexPath: IndexPath?
+		
 		override init(frame: CGRect) {
 			super.init(frame: frame)
 			
@@ -276,8 +281,9 @@ extension UINavigationItem {
 		whenScrollingPast viewToMonitor: UIView,
 		in scrollView: UIScrollView
 	) -> ScrollViewObserverCancellable {
-		let wrapperView = customTitleLabelView(with: title)
-		return scrollView.toggleVisibility(of: wrapperView, whenScrollingPast: viewToMonitor, edge: .bottom, visibilityUpdateCallback: wrapperView.updateCallback)
+		return customTitleLabelView(with: title, viewToMonitor: viewToMonitor, indexPath: nil, scrollView: scrollView) { wrapperView in
+			return scrollView.toggleVisibility(of: wrapperView, whenScrollingPast: viewToMonitor, edge: .bottom, visibilityUpdateCallback: wrapperView.updateCallback)
+		}
 	}
 	
 	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given indexpath.
@@ -294,8 +300,9 @@ extension UINavigationItem {
 		whenScrollingPast indexPath: IndexPath,
 		in tableView: UITableView
 	) -> ScrollViewObserverCancellable {
-		let wrapperView = customTitleLabelView(with: title)
-		return tableView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
+		return customTitleLabelView(with: title, viewToMonitor: nil, indexPath: indexPath, scrollView: tableView) { wrapperView in
+			return tableView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
+		}
 	}
 	
 	/// Sets a custom title view to this navigation item that gets shown when we scrolled past the given indexpath.
@@ -312,8 +319,9 @@ extension UINavigationItem {
 		whenScrollingPast indexPath: IndexPath,
 		in collectionView: UICollectionView
 	) -> ScrollViewObserverCancellable {
-		let wrapperView = customTitleLabelView(with: title)
-		return collectionView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
+		return customTitleLabelView(with: title, viewToMonitor: nil, indexPath: indexPath, scrollView: collectionView) { wrapperView in
+			return collectionView.toggleVisibility(of: wrapperView, whenScrollingPast: indexPath, visibilityUpdateCallback: wrapperView.updateCallback)
+		}
 	}
 	
 	/// Sets up a title view and returns the created wrapper view
@@ -331,10 +339,26 @@ extension UINavigationItem {
 	}
 	
 	/// Sets up a title and returns the  created titlewrapperview
-	private func customTitleLabelView(with title: String?) -> CustomTitleWrapperView {
+	private func customTitleLabelView(with title: String?, viewToMonitor: UIView?, indexPath: IndexPath?, scrollView: UIScrollView, creation: (CustomTitleLabelWrapperView) -> ScrollViewObserverCancellable) -> ScrollViewObserverCancellable  {
 		let wrapperView = (titleView as? CustomTitleLabelWrapperView) ?? CustomTitleLabelWrapperView()
 		wrapperView.label.text = title
+		
+		if wrapperView.viewToMonitor !== viewToMonitor || wrapperView.indexPath != indexPath || wrapperView.scrollView !== scrollView {
+			wrapperView.cancellable?.cancel()
+			wrapperView.cancellable = nil
+		}
+		
+		wrapperView.viewToMonitor = viewToMonitor
+		wrapperView.indexPath = indexPath
+		wrapperView.scrollView = scrollView
+		
 		titleView = wrapperView
-		return wrapperView
+		if let cancellable = wrapperView.cancellable {
+			return cancellable
+		} else {
+			let cancellable = creation(wrapperView)
+			wrapperView.cancellable = cancellable
+			return cancellable
+		}
 	}
 }

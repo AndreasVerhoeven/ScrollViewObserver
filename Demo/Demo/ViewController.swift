@@ -25,7 +25,9 @@ class ViewController: UITableViewController {
 		// We also keep track of the cancellable, to stop this toggling when a user taps on another row.
 		//
 		// (Note that if you have no plans of stopping the toggling, you don't need to keep track of the cancellable)
-		cancellable = tableView.toggleVisibility(of: label, style: .hideWhenPastTreshold,  whenScrollingPast: IndexPath(row: 3, section: 0))
+		//cancellable = tableView.toggleVisibility(of: label, style: .hideWhenPastTreshold,  whenScrollingPast: IndexPath(row: 3, section: 0))
+		
+		navigationItem.showCustomTitle("CustomTile", whenScrollingPast: IndexPath(row: 3, section: 0), in: tableView)
 	}
 
 	override func numberOfSections(in tableView: UITableView) -> Int {
@@ -49,7 +51,9 @@ class ViewController: UITableViewController {
 		cancellable?.cancel()
 
 		// and create a new one for the tapped index path
-		cancellable = tableView.toggleVisibility(of: label, style: .hideWhenPastTreshold,  whenScrollingPast: indexPath)
+		//cancellable = tableView.toggleVisibility(of: label, style: .hideWhenPastTreshold,  whenScrollingPast: indexPath)
+		
+		navigationItem.showCustomTitle(indexPath.debugDescription, whenScrollingPast: indexPath, in: tableView)
 	}
 }
 
