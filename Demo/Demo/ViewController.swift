@@ -45,7 +45,7 @@ class ViewController: UITableViewController {
 	}
 
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		guard let label = navigationItem.titleView else { return }
+		//guard let label = navigationItem.titleView else { return }
 
 		// We first cancel the previous toggler
 		cancellable?.cancel()

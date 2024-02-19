@@ -324,6 +324,28 @@ extension UINavigationItem {
 		}
 	}
 	
+	/// Updates a custom title previously set by `showCustomTitle()`
+	///
+	/// - Parameters:
+	/// 	- title: the title to set when visible
+	/// 	- indexPath: the index path to use as treshold
+	/// 	- collectionView: the collectionView to check scrolling in
+	///
+	public func updateCustomTitle(_ title: String?, animated: Bool) {
+		guard let wrapperView = titleView as? CustomTitleLabelWrapperView else {
+			print("titleView is not set by a previous invocation of showCustomTitle() - nothing will be updated")
+			return
+		}
+		
+		if animated == true && wrapperView.label.text != title {
+			UIView.transition(with: wrapperView.label, duration: 0.25, options: [.beginFromCurrentState, .allowUserInteraction], animations: {
+				wrapperView.label.text = title
+			})
+		} else {
+			wrapperView.label.text = title
+		}
+	}
+	
 	/// Sets up a title view and returns the created wrapper view
 	private func customTitleWrapperView(with customTitleView: UIView) -> CustomTitleWrapperView {
 		let wrapperView: CustomTitleWrapperView
