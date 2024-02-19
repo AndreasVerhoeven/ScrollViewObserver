@@ -337,6 +337,7 @@ extension UINavigationItem {
 			return
 		}
 		
+		self.title = title
 		if animated == true && wrapperView.label.text != title {
 			UIView.transition(with: wrapperView.label, duration: 0.25, options: [.beginFromCurrentState, .allowUserInteraction], animations: {
 				wrapperView.label.text = title
@@ -374,6 +375,7 @@ extension UINavigationItem {
 		wrapperView.indexPath = indexPath
 		wrapperView.scrollView = scrollView
 		
+		self.title = title
 		titleView = wrapperView
 		if let cancellable = wrapperView.cancellable {
 			return cancellable
