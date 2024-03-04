@@ -139,6 +139,7 @@ extension UINavigationItem {
 				
 				if let view {
 					view.translatesAutoresizingMaskIntoConstraints = false
+					view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 					transformView.addSubview(view)
 					
 					NSLayoutConstraint.activate([
