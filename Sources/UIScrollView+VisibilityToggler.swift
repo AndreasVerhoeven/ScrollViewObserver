@@ -139,7 +139,7 @@ extension UINavigationItem {
 				
 				if let view {
 					view.translatesAutoresizingMaskIntoConstraints = false
-					view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+					view.setContentCompressionResistancePriority(UILayoutPriority(rawValue: UILayoutPriority.defaultHigh.rawValue - 1), for: .horizontal)
 					transformView.addSubview(view)
 					
 					NSLayoutConstraint.activate([
@@ -207,6 +207,7 @@ extension UINavigationItem {
 			label.font = UIFont.preferredFont(forTextStyle: .headline)
 			label.textAlignment = .center
 			label.numberOfLines = 1
+			label.setContentCompressionResistancePriority(UILayoutPriority(rawValue: UILayoutPriority.defaultHigh.rawValue - 1), for: .horizontal)
 			
 			_ = { view = label }()
 		}
