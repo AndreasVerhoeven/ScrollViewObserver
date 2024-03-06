@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4994F3D42B98B2C9002A8036 /* UINavigationItem+CustomTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4994F3D32B98B2C9002A8036 /* UINavigationItem+CustomTitle.swift */; };
 		49A6F79626508AAB002EB98D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A6F79526508AAB002EB98D /* AppDelegate.swift */; };
 		49A6F79826508AAB002EB98D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A6F79726508AAB002EB98D /* SceneDelegate.swift */; };
 		49A6F79A26508AAB002EB98D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A6F79926508AAB002EB98D /* ViewController.swift */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4994F3D32B98B2C9002A8036 /* UINavigationItem+CustomTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UINavigationItem+CustomTitle.swift"; sourceTree = "<group>"; };
 		49A6F79226508AAB002EB98D /* Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A6F79526508AAB002EB98D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		49A6F79726508AAB002EB98D /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 				49A6F7F02651C840002EB98D /* UIScrollView+ObserverHelpers.swift */,
 				49A6F7F22651CB7F002EB98D /* UIScrollView+MonitorHelpers.swift */,
 				49A6F7F62651CCB7002EB98D /* UIScrollView+VisibilityToggler.swift */,
+				4994F3D32B98B2C9002A8036 /* UINavigationItem+CustomTitle.swift */,
 				49A6F7F42651CB8A002EB98D /* ScrollViewObserverCancellable.swift */,
 			);
 			name = Sources;
@@ -173,6 +176,7 @@
 				49A6F79626508AAB002EB98D /* AppDelegate.swift in Sources */,
 				49A6F7F32651CB7F002EB98D /* UIScrollView+MonitorHelpers.swift in Sources */,
 				49A6F79826508AAB002EB98D /* SceneDelegate.swift in Sources */,
+				4994F3D42B98B2C9002A8036 /* UINavigationItem+CustomTitle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
