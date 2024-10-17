@@ -86,6 +86,11 @@ extension UINavigationItem {
 		override init(frame: CGRect) {
 			super.init(frame: frame)
 			
+			label.adjustsFontForContentSizeCategory = true
+			if #available(iOS 15, *) {
+				label.minimumContentSizeCategory = .large
+				label.maximumContentSizeCategory = .extraExtraLarge
+			}
 			label.font = UIFont.preferredFont(forTextStyle: .headline)
 			label.textAlignment = .center
 			label.numberOfLines = 1
