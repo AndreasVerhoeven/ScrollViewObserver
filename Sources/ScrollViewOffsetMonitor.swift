@@ -103,7 +103,9 @@ public class ScrollViewOffsetMonitor: NSObject {
 
 	/// Default treshold provider, you can call this from a custom callback to dynamically override behavior
 	public func defaultTreshold(in scrollView: UIScrollView) -> CGFloat {
-		guard let tableView = scrollView as? UITableView, tableView.numberOfSections > 0 && tableView.tableHeaderView == nil else {return scrollViewOffset(in: scrollView)}
+		guard let tableView = scrollView as? UITableView, tableView.numberOfSections > 0 && tableView.tableHeaderView == nil else {
+			return -scrollView.adjustedContentInset.top
+		}
 		return tableView.rect(forSection: 0).minY
 	}
 
